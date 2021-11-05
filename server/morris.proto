@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+service Morris {
+	rpc GetBoard (Empty) returns (BoardState);
+	rpc MakeMove (Move) returns (BoardState);
+}
+
+message Empty { }
+
+message Move {
+	int32 from = 1;
+	int32 to = 2;
+}
+
+message BoardState {
+	repeated BoardSpace board = 1;
+}
+
+enum BoardSpace {
+	FREE = 0;
+	WHITE = 1;
+	BLACK = 2;
+}
