@@ -1,7 +1,9 @@
 syntax = "proto3";
 
+option go_package = "github.com/BlueMango10/Nine-men-s-morris/morris";
+
 service Morris {
-	rpc GetBoard (Empty) returns (BoardState);
+	rpc GetBoardStream (Empty) returns (stream BoardState);
 	rpc MakeMove (Move) returns (BoardState);
 }
 
@@ -14,6 +16,7 @@ message Move {
 
 message BoardState {
 	repeated BoardSpace board = 1;
+	BoardSpace turn = 2;
 }
 
 enum BoardSpace {
