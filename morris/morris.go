@@ -162,15 +162,15 @@ func (bs *BoardState) Visualize(showSpaceIds bool) string {
 }
 
 // Returns a character representing the color of a BoardSpace. If it is empty,
-// background will be used instead.
+// background will be used instead. Background should be two characters long.
 func (bs *BoardSpace) Visualize(background string) string {
 	switch *bs {
 	case BoardSpace_FREE:
-		return "  "
+		return background
 	case BoardSpace_WHITE:
 		return "⚪"
 	case BoardSpace_BLACK:
 		return "⚫"
 	}
-	return "  "
+	return background
 }
