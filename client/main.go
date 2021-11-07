@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BlueMango10/Nine-men-s-morris/morris"
@@ -65,17 +66,31 @@ func startClient(address string) {
 	if err != nil {
 		logF(err.Error())
 	}
+	var useFontSafeSymbols string
+	fmt.Print("Font compatibility mode? [Y/N (Default:N)]> ")
+	fmt.Scanln(&useFontSafeSymbols)
+	switch strings.ToUpper(strings.TrimSpace(useFontSafeSymbols)) {
+	case "Y":
+		morris.SetSymbolMode(true)
+	default:
+		morris.SetSymbolMode(false)
+	}
 	go boardStreamReader(boardStream)
 	var (
-		from int32
-		to   int32
+		from   int32
+		to     int32
+		remove int32
 	)
 	for {
-		fmt.Scanln(&from, &to)
-		client.MakeMove(context.Background(), &morris.Move{
-			From: from,
-			To:   to,
+		fmt.Scanln(&from, &to, &remove)
+		_, err := client.MakeMove(context.Background(), &morris.Move{
+			From:   from,
+			To:     to,
+			Remove: remove,
 		})
+		if err != nil {
+			logE(err.Error())
+		}
 	}
 }
 
@@ -91,5 +106,6 @@ func boardStreamReader(stream morris.Morris_GetBoardStreamClient) {
 		}
 		logI(board.Turn.Visualize(""))
 		fmt.Print(board.Visualize(true))
+		fmt.Print("[From To Remove]>")
 	}
 }

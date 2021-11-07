@@ -9,9 +9,20 @@ type edge struct {
 	To   int32
 }
 
+type IllegalMoveError struct {
+	Description string
+}
+
+func (e IllegalMoveError) Error() string {
+	return e.Description
+}
+
 var (
 	legalMoves       *[]edge     = createMoveGraph()
 	possibleMorrises *[][3]int32 = createMorrisSet()
+
+	whitePiece string = "⚪"
+	blackPiece string = "⚫"
 )
 
 func createMoveGraph() *[]edge {
@@ -115,7 +126,9 @@ func (bs *BoardState) Visualize(showSpaceIds bool) string {
 			"  │    │         │         │    │ \n\r" +
 			"  │  18%s──────19%s──────20%s   │ \n\r" +
 			"  │              │              │ \n\r" +
-			"21%s───────────22%s───────────23%s\n\r"
+			"21%s───────────22%s───────────23%s\n\r" +
+			"Graveyard:   %s%d   %s%d\n\r" +
+			"%s\n\r"
 	} else {
 		boardString = "Current Turn: %s \n\r" +
 			"  %s─────────────%s─────────────%s\n\r" +
@@ -130,7 +143,9 @@ func (bs *BoardState) Visualize(showSpaceIds bool) string {
 			"  │    │         │         │    │ \n\r" +
 			"  │    %s────────%s────────%s   │ \n\r" +
 			"  │              │              │ \n\r" +
-			"  %s─────────────%s─────────────%s\n\r"
+			"  %s─────────────%s─────────────%s\n\r" +
+			"Graveyard:   %s%d   %s%d\n\r" +
+			"%s\n\r"
 	}
 	return fmt.Sprintf(boardString,
 		bs.Turn.Visualize("  "),
@@ -158,19 +173,44 @@ func (bs *BoardState) Visualize(showSpaceIds bool) string {
 		board[21].Visualize("└─"),
 		board[22].Visualize("┴─"),
 		board[23].Visualize("┘ "),
+		whitePiece, bs.WhiteGrave,
+		blackPiece, bs.BlackGrave,
+		bs.Phase.Visualize(bs.WhitePieces, bs.BlackPieces),
 	)
+}
+
+func (p *Phase) Visualize(whiteLeft int32, blackLeft int32) string {
+	switch *p {
+	case Phase_PLACE:
+		return fmt.Sprintf("Placeing - %s%d  %s%d", whitePiece, whiteLeft, blackPiece, blackLeft)
+	case Phase_MOVE:
+		return "Moving"
+	case Phase_FLY:
+		return "Flying"
+	default:
+		return ""
+	}
 }
 
 // Returns a character representing the color of a BoardSpace. If it is empty,
 // background will be used instead. Background should be two characters long.
-func (bs *BoardSpace) Visualize(background string) string {
+func (bs *BoardSpace) Visualize(background string) string { // FIXME: Default terminal fonts cannot show emojis
 	switch *bs {
-	case BoardSpace_FREE:
-		return background
 	case BoardSpace_WHITE:
-		return "⚪"
+		return whitePiece
 	case BoardSpace_BLACK:
-		return "⚫"
+		return blackPiece
+	default:
+		return background
 	}
-	return background
+}
+
+func SetSymbolMode(useFontSafeSymbols bool) {
+	if useFontSafeSymbols {
+		whitePiece = "■ "
+		blackPiece = "□ "
+	} else {
+		whitePiece = "⚪"
+		blackPiece = "⚫"
+	}
 }

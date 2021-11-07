@@ -12,15 +12,27 @@ message Empty { }
 message Move {
 	int32 from = 1;
 	int32 to = 2;
+	int32 remove = 3;
 }
 
 message BoardState {
 	repeated BoardSpace board = 1;
 	BoardSpace turn = 2;
+	int32 whitePieces = 3;
+	int32 blackPieces = 4;
+	int32 whiteGrave = 5;
+	int32 blackGrave = 6;
+	Phase phase = 7;
 }
 
 enum BoardSpace {
 	FREE = 0;
 	WHITE = 1;
 	BLACK = 2;
+}
+
+enum Phase {
+	PLACE = 0;
+	MOVE = 1;
+	FLY = 2;
 }
