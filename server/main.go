@@ -9,11 +9,9 @@ import (
 	"time"
 )
 
-const (
-	hostAddress = "localhost:32610"
-)
-
 var (
+	hostAddress = "localhost:32610"
+
 	// Logs str
 	logI func(str string)
 	// Logs str as an error
@@ -45,6 +43,12 @@ func main() {
 	}
 
 	logI(fmt.Sprintf("=== LOG START: %v ===", time.Now().Format(time.RFC1123)))
+	fmt.Print("[Address]> ")
+	var address string
+	fmt.Scanln(&address)
+	if address != "" {
+		hostAddress = address
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go startServer(hostAddress, wg)
