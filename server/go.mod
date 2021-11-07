@@ -2,8 +2,10 @@ module github.com/BlueMango10/Nine-men-s-morris/server
 
 go 1.17
 
+replace github.com/BlueMango10/Nine-men-s-morris/morris => ../morris
+
 require (
-	github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211105143821-b783572164fe
+	github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211106220125-c11b133da4bd
 	google.golang.org/grpc v1.42.0
 )
 

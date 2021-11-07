@@ -2,6 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211105143821-b783572164fe h1:ThLBHhd20a7F64pGFd2aYRbjaSBm3Yhf/PAZjsuzeq4=
 github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211105143821-b783572164fe/go.mod h1:HJkXt/It1Gz7pm84yd8L5whWoM2oZvJIbCAcxPAJDF0=
+github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211106220125-c11b133da4bd h1:A/zoD1GzchOaBYlfPN+lKLYQlYKeC1eMHc7JJeSj4oo=
+github.com/BlueMango10/Nine-men-s-morris/morris v0.0.0-20211106220125-c11b133da4bd/go.mod h1:HJkXt/It1Gz7pm84yd8L5whWoM2oZvJIbCAcxPAJDF0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

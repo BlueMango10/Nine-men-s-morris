@@ -4,23 +4,28 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/BlueMango10/Nine-men-s-morris/morris"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type MorrisServer struct {
 	morris.UnimplementedMorrisServer
-	// Data goes here
+	state       morris.BoardState
+	streamChans []*chan *morris.BoardState
 }
 
 func newMorrisServer() *MorrisServer {
-	return &MorrisServer{}
+	return &MorrisServer{
+		state: morris.BoardState{
+			Turn:  morris.BoardSpace_WHITE,
+			Board: make([]morris.BoardSpace, 24),
+		},
+	}
 }
 
-func startServer(address string) {
+func startServer(address string, wg sync.WaitGroup) {
 	logI(fmt.Sprintf("STARTING SERVER WITH ADDRESS: %s", address))
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
@@ -31,18 +36,43 @@ func startServer(address string) {
 
 	grpcServer := grpc.NewServer(opts...)
 	morris.RegisterMorrisServer(grpcServer, newMorrisServer())
-	err = grpcServer.Serve(lis)
+	wg.Done()
+	logI("SERVER STARTED")
 
+	err = grpcServer.Serve(lis)
 	if err != nil {
 		logF(err.Error())
 	}
-	logI("SERVER STARTED")
 }
 
-func (s *MorrisServer) GetBoardStream(*morris.Empty, morris.Morris_GetBoardStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetBoardStream not implemented")
+func (s *MorrisServer) GetBoardStream(_ *morris.Empty, stream morris.Morris_GetBoardStreamServer) error {
+	logI("Board stream requested.")
+	streamChan := make(chan *morris.BoardState)
+	s.streamChans = append(s.streamChans, &streamChan)
+	stream.Send(&s.state)
+	for {
+		err := stream.Send(<-streamChan)
+		if err != nil {
+			logE(err.Error())
+		}
+	}
 }
 
-func (s *MorrisServer) MakeMove(context.Context, *morris.Move) (*morris.BoardState, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MakeMove not implemented")
+func (s *MorrisServer) MakeMove(ctx context.Context, move *morris.Move) (*morris.BoardState, error) {
+	s.state.Board[move.From] = morris.BoardSpace_FREE
+	s.state.Board[move.To] = s.state.Turn
+	switch s.state.Turn {
+	case morris.BoardSpace_WHITE:
+		s.state.Turn = morris.BoardSpace_BLACK
+	case morris.BoardSpace_BLACK:
+		s.state.Turn = morris.BoardSpace_WHITE
+	}
+	s.Broadcast(&s.state)
+	return &s.state, nil
+}
+
+func (s *MorrisServer) Broadcast(state *morris.BoardState) {
+	for _, streamChan := range s.streamChans {
+		*streamChan <- state
+	}
 }

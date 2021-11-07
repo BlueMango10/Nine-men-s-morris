@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -44,5 +45,10 @@ func main() {
 	}
 
 	logI(fmt.Sprintf("=== LOG START: %v ===", time.Now().Format(time.RFC1123)))
-	startServer(hostAddress)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go startServer(hostAddress, wg)
+	wg.Wait()
+	fmt.Println("Press Enter to exit")
+	fmt.Scanln()
 }

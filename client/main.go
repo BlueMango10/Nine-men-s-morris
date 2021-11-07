@@ -4,12 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
 
 	"github.com/BlueMango10/Nine-men-s-morris/morris"
 	"google.golang.org/grpc"
+)
+
+const (
+	hostAddress = "localhost:32610"
 )
 
 var (
@@ -19,8 +24,6 @@ var (
 	logE func(str string)
 	// Logs str a fatal error, then panics
 	logF func(str string)
-
-	updateStream morris.Morris_GetBoardStreamClient
 )
 
 func main() {
@@ -44,6 +47,7 @@ func main() {
 		panic(str)
 	}
 	logI(fmt.Sprintf("=== LOG START: %v ===", time.Now().Format(time.RFC1123)))
+	startClient(hostAddress)
 }
 
 func startClient(address string) {
@@ -57,8 +61,35 @@ func startClient(address string) {
 	defer conn.Close()
 
 	client := morris.NewMorrisClient(conn)
-	updateStream, err = client.GetBoardStream(context.Background(), &morris.Empty{})
+	boardStream, err := client.GetBoardStream(context.Background(), &morris.Empty{})
 	if err != nil {
 		logF(err.Error())
+	}
+	go boardStreamReader(boardStream)
+	var (
+		from int32
+		to   int32
+	)
+	for {
+		fmt.Scanln(&from, &to)
+		client.MakeMove(context.Background(), &morris.Move{
+			From: from,
+			To:   to,
+		})
+	}
+}
+
+func boardStreamReader(stream morris.Morris_GetBoardStreamClient) {
+	for {
+		board, err := stream.Recv()
+		if err == io.EOF {
+			logI("EOF")
+			break
+		}
+		if err != nil {
+			logF(err.Error())
+		}
+		logI(board.Turn.Visualize(""))
+		fmt.Print(board.Visualize(true))
 	}
 }
