@@ -131,7 +131,50 @@ func (s *MorrisServer) MakeMove(ctx context.Context, move *morris.Move) (*morris
 				return nil, err
 			}
 		case morris.Phase_MOVE:
+			if s.state.Board[move.From] != s.state.Turn {
+				err := morris.IllegalMoveError{Description: "You cannot move enemy pieces."}
+				logE(err.Error())
+				return nil, err
+			}
+			if !move.IsValid() {
+				err := morris.IllegalMoveError{Description: "You must move along the lines."}
+				logE(err.Error())
+				return nil, err
+			}
+			if s.state.Board[move.To] != morris.BoardSpace_FREE {
+				err := morris.IllegalMoveError{Description: "You must move to an empty space."}
+				logE(err.Error())
+				return nil, err
+			}
+			s.state.Board[move.From] = morris.BoardSpace_FREE
+			s.state.Board[move.To] = s.state.Turn
+			*ownPieces--
+			err := s.handleMorris(move.To, move.Remove, othersGrave, s.state.Turn)
+			if err != nil {
+				s.state = oldState
+				logE(err.Error())
+				return nil, err
+			}
 		case morris.Phase_FLY:
+			if s.state.Board[move.From] != s.state.Turn {
+				err := morris.IllegalMoveError{Description: "You cannot move enemy pieces."}
+				logE(err.Error())
+				return nil, err
+			}
+			if s.state.Board[move.To] != morris.BoardSpace_FREE {
+				err := morris.IllegalMoveError{Description: "You must move to an empty space."}
+				logE(err.Error())
+				return nil, err
+			}
+			s.state.Board[move.From] = morris.BoardSpace_FREE
+			s.state.Board[move.To] = s.state.Turn
+			*ownPieces--
+			err := s.handleMorris(move.To, move.Remove, othersGrave, s.state.Turn)
+			if err != nil {
+				s.state = oldState
+				logE(err.Error())
+				return nil, err
+			}
 		}
 	}
 
@@ -143,7 +186,7 @@ func (s *MorrisServer) MakeMove(ctx context.Context, move *morris.Move) (*morris
 		if s.state.BlackPieces > 0 {
 			s.state.Phase = morris.Phase_PLACE
 			logI("Phase: PLACE")
-		} else if s.state.BlackGrave < 3 {
+		} else if s.state.BlackGrave < 6 {
 			s.state.Phase = morris.Phase_MOVE
 			logI("Phase: MOVE")
 		} else {
@@ -156,7 +199,7 @@ func (s *MorrisServer) MakeMove(ctx context.Context, move *morris.Move) (*morris
 		if s.state.WhitePieces > 0 {
 			s.state.Phase = morris.Phase_PLACE
 			logI("Phase: PLACE")
-		} else if s.state.WhiteGrave < 3 {
+		} else if s.state.WhiteGrave < 6 {
 			s.state.Phase = morris.Phase_MOVE
 			logI("Phase: MOVE")
 		} else {
