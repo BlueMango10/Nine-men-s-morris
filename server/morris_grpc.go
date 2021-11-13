@@ -65,54 +65,74 @@ func (s *MorrisServer) GetBoardStream(_ *morris.Empty, stream morris.Morris_GetB
 
 func (s *MorrisServer) MakeMove(ctx context.Context, move *morris.Move) (*morris.BoardState, error) {
 	logI("Move attempt: " + fmt.Sprint(move))
-	oldState := morris.BoardState{
-		Turn:        s.state.Turn,
-		Board:       make([]morris.BoardSpace, 24),
-		WhitePieces: s.state.WhitePieces,
-		BlackPieces: s.state.BlackPieces,
-		WhiteGrave:  s.state.WhiteGrave,
-		BlackGrave:  s.state.BlackGrave,
-		Phase:       s.state.Phase,
-	}
-	copy(oldState.Board, s.state.Board)
-	var (
-		ownPieces *int32
-		//othersPieces *int32
-		//ownGrave     *int32
-		othersGrave *int32
-	)
-	switch s.state.Turn {
-	case morris.BoardSpace_WHITE:
-		ownPieces = &s.state.WhitePieces
-		//othersPieces = &s.state.BlackPieces
-		//ownGrave = &s.state.WhiteGrave
-		othersGrave = &s.state.BlackGrave
-	case morris.BoardSpace_BLACK:
-		ownPieces = &s.state.BlackPieces
-		//othersPieces = &s.state.WhitePieces
-		//ownGrave = &s.state.BlackGrave
-		othersGrave = &s.state.WhiteGrave
-	}
-
-	switch s.state.Phase {
-	case morris.Phase_PLACE:
-		// Place in space if the space is free
-		if s.state.Board[move.To] == morris.BoardSpace_FREE {
-			s.state.Board[move.To] = s.state.Turn
-			*ownPieces--
-			err := s.handleMorris(move.To, move.Remove, othersGrave, s.state.Turn)
-			if err != nil {
-				s.state = oldState
-				logE(err.Error())
-				return nil, err
-			}
-		} else {
-			err := morris.IllegalMoveError{Description: "Piece must be placed on an empty space."}
+	if move.From == -1 {
+		logI("Turn skipped")
+	} else {
+		if !morris.IsBoardSpace(move.From) {
+			err := morris.IllegalMoveError{Description: fmt.Sprintf("%d is not a board space.", move.From)}
 			logE(err.Error())
 			return nil, err
 		}
-	case morris.Phase_MOVE:
-	case morris.Phase_FLY:
+		if !morris.IsBoardSpace(move.To) {
+			err := morris.IllegalMoveError{Description: fmt.Sprintf("%d is not a board space.", move.To)}
+			logE(err.Error())
+			return nil, err
+		}
+		if !morris.IsBoardSpace(move.Remove) {
+			err := morris.IllegalMoveError{Description: fmt.Sprintf("%d is not a board space.", move.Remove)}
+			logE(err.Error())
+			return nil, err
+		}
+
+		oldState := morris.BoardState{
+			Turn:        s.state.Turn,
+			Board:       make([]morris.BoardSpace, 24),
+			WhitePieces: s.state.WhitePieces,
+			BlackPieces: s.state.BlackPieces,
+			WhiteGrave:  s.state.WhiteGrave,
+			BlackGrave:  s.state.BlackGrave,
+			Phase:       s.state.Phase,
+		}
+		copy(oldState.Board, s.state.Board)
+		var (
+			ownPieces *int32
+			//othersPieces *int32
+			//ownGrave     *int32
+			othersGrave *int32
+		)
+		switch s.state.Turn {
+		case morris.BoardSpace_WHITE:
+			ownPieces = &s.state.WhitePieces
+			//othersPieces = &s.state.BlackPieces
+			//ownGrave = &s.state.WhiteGrave
+			othersGrave = &s.state.BlackGrave
+		case morris.BoardSpace_BLACK:
+			ownPieces = &s.state.BlackPieces
+			//othersPieces = &s.state.WhitePieces
+			//ownGrave = &s.state.BlackGrave
+			othersGrave = &s.state.WhiteGrave
+		}
+
+		switch s.state.Phase {
+		case morris.Phase_PLACE:
+			// Place in space if the space is free
+			if s.state.Board[move.To] == morris.BoardSpace_FREE {
+				s.state.Board[move.To] = s.state.Turn
+				*ownPieces--
+				err := s.handleMorris(move.To, move.Remove, othersGrave, s.state.Turn)
+				if err != nil {
+					s.state = oldState
+					logE(err.Error())
+					return nil, err
+				}
+			} else {
+				err := morris.IllegalMoveError{Description: "Piece must be placed on an empty space."}
+				logE(err.Error())
+				return nil, err
+			}
+		case morris.Phase_MOVE:
+		case morris.Phase_FLY:
+		}
 	}
 
 	// Update turn

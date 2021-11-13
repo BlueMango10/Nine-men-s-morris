@@ -55,6 +55,14 @@ func createMorrisSet() *[][3]int32 {
 	}
 }
 
+func IsBoardSpace(space int32) bool {
+	if space < 0 || space >= 24 {
+		return false
+	} else {
+		return true
+	}
+}
+
 // Checks if a move is valid.
 func (m *Move) IsValid() bool {
 	for _, e := range *legalMoves {
